@@ -84,14 +84,32 @@ function App() {
       // Editing existing bucket
       if (newBucket && newBucket !== editingBucket && !buckets.includes(newBucket)) {
         // Update bucket name in all items
-        const updatedItems = items.map(item => ({
-          ...item,
-          buckets: item.buckets.map(b => b === editingBucket ? newBucket : b)
-        }));
+        const updatedItems = items.map(item => {
+          if (item.buckets && item.buckets.includes(editingBucket)) {
+            const newBuckets = [...item.buckets];
+            const index = newBuckets.indexOf(editingBucket);
+            if (index !== -1) {
+              newBuckets[index] = newBucket;
+            }
+            return { ...item, buckets: newBuckets };
+          }
+          return item;
+        });
+
         setItems(updatedItems);
 
         // Update buckets list
-        setBuckets(buckets.map(b => b === editingBucket ? newBucket : b));
+        const updatedBuckets = [...buckets];
+        const bucketIndex = updatedBuckets.indexOf(editingBucket);
+        if (bucketIndex !== -1) {
+          updatedBuckets[bucketIndex] = newBucket;
+          setBuckets(updatedBuckets);
+        }
+
+        if (selectedBucket === editingBucket) {
+          setSelectedBucket(newBucket);
+        }
+
         setEditingBucket(null);
         setNewBucket('');
         setShowBucketForm(false);
@@ -138,10 +156,15 @@ function App() {
     if (bucketName === 'all') return; // Don't allow deletion of 'all' bucket
 
     // Remove bucket from items
-    const updatedItems = items.map(item => ({
-      ...item,
-      buckets: item.buckets.filter(b => b !== bucketName)
-    }));
+    const updatedItems = items.map(item => {
+      if (item.buckets && item.buckets.includes(bucketName)) {
+        return {
+          ...item,
+          buckets: item.buckets.filter(b => b !== bucketName)
+        };
+      }
+      return item;
+    });
 
     setItems(updatedItems);
     setBuckets(buckets.filter(b => b !== bucketName));
@@ -205,31 +228,13 @@ function App() {
 
   // Drag and drop handlers
   const handleDragStart = (e, item) => {
-    // Set a ghost image to be more subtle
-    const ghostElement = document.createElement('div');
-    ghostElement.style.width = '10px';
-    ghostElement.style.height = '10px';
-    ghostElement.style.backgroundColor = 'transparent';
-    document.body.appendChild(ghostElement);
-
-    e.dataTransfer.setDragImage(ghostElement, 0, 0);
-    e.dataTransfer.effectAllowed = 'move';
-
     setDraggedItem(item);
-
-    // Clean up ghost element
-    setTimeout(() => {
-      document.body.removeChild(ghostElement);
-    }, 0);
   };
 
   const handleDragOver = (e, item) => {
     e.preventDefault();
     if (!draggedItem || draggedItem.id === item.id) return;
-
     e.dataTransfer.dropEffect = 'move';
-
-    // Add drop zone visual cue - handled via CSS
   };
 
   const handleDrop = (e, targetItem) => {
@@ -252,9 +257,9 @@ function App() {
     setDraggedItem(null);
   };
 
-  const filteredItems = selectedBucket === 'all'
+  const filteredItems = items && selectedBucket === 'all'
     ? items
-    : items.filter(item => item.buckets && item.buckets.includes(selectedBucket))
+    : items?.filter(item => item.buckets && item.buckets.includes(selectedBucket)) || []
 
   // Determine if content might be a URL
   const isLikelyUrl = (text) => {
@@ -268,8 +273,8 @@ function App() {
   }
 
   return (
-    <div className="w-[550px] min-h-[450px] p-4 bg-[#111111] text-gray-100">
-      <div className="flex justify-between items-center mb-6">
+    <div className="w-[550px] h-[600px] flex flex-col bg-[#111111] text-gray-100 overflow-hidden">
+      <div className="flex justify-between items-center p-4 border-b border-[#2A2A2A]">
         <div className="flex items-center">
           <button
             onClick={() => setSidebarHidden(!sidebarHidden)}
@@ -300,153 +305,164 @@ function App() {
         </button>
       </div>
 
-      <div className="flex gap-6 mb-4 relative">
+      <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         {!sidebarHidden && (
-          <div className="w-1/5 space-y-2 transition-all duration-300 ease-in-out">
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-sm uppercase text-gray-400 font-medium">Buckets</h2>
-            </div>
-            <div className="bg-[#1A1A1A] rounded-lg p-2 shadow-md">
-              {buckets.map(bucket => (
-                <div
-                  key={bucket}
-                  className="group relative"
-                >
-                  <button
-                    onClick={() => setSelectedBucket(bucket)}
-                    className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${selectedBucket === bucket
-                      ? 'bg-gray-700 text-white'
-                      : 'hover:bg-[#2A2A2A] text-gray-300'
-                      }`}
+          <div className="w-1/3 h-full border-r border-[#2A2A2A] overflow-y-auto bg-[#171717]">
+            <div className="p-4">
+              <h2 className="text-sm uppercase text-gray-400 font-medium mb-3">Buckets</h2>
+              <div className="space-y-1">
+                {buckets.map(bucket => (
+                  <div
+                    key={bucket}
+                    className="group relative"
                   >
-                    {bucket === 'all' ? 'All Items' : bucket}
-                  </button>
-                  {bucket !== 'all' && (
-                    <div className="absolute top-1 right-2 opacity-0 group-hover:opacity-100 flex space-x-1">
-                      <button
-                        onClick={(e) => editBucket(bucket, e)}
-                        className="p-1 rounded hover:bg-[#3A3A3A] text-gray-400 hover:text-white transition-colors"
-                        title="Edit bucket"
-                      >
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                        </svg>
-                      </button>
-                      <button
-                        onClick={(e) => deleteBucket(bucket, e)}
-                        className="p-1 rounded hover:bg-[#3A3A3A] text-gray-400 hover:text-red-400 transition-colors"
-                        title="Delete bucket"
-                      >
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M3 6h18"></path>
-                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                        </svg>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
-              <button
-                onClick={() => {
-                  setEditingBucket(null);
-                  setNewBucket('');
-                  setShowBucketForm(true);
-                }}
-                className="w-full text-left px-3 py-2 rounded-md text-sm text-gray-400 hover:text-gray-300 transition-colors"
-              >
-                + New Bucket
-              </button>
+                    <button
+                      onClick={() => setSelectedBucket(bucket)}
+                      className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${selectedBucket === bucket
+                        ? 'bg-gray-700 text-white'
+                        : 'hover:bg-[#2A2A2A] text-gray-300'
+                        }`}
+                    >
+                      {bucket === 'all' ? 'All Items' : bucket}
+                    </button>
+                    {bucket !== 'all' && (
+                      <div className="absolute top-1 right-2 opacity-0 group-hover:opacity-100 flex space-x-1">
+                        <button
+                          onClick={(e) => editBucket(bucket, e)}
+                          className="p-1 rounded hover:bg-[#3A3A3A] text-gray-400 hover:text-white transition-colors"
+                          title="Edit bucket"
+                        >
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                          </svg>
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            if (window.confirm(`Are you sure you want to delete the "${bucket}" bucket? This will remove it from all items.`)) {
+                              deleteBucket(bucket, e);
+                            }
+                          }}
+                          className="p-1 rounded hover:bg-[#3A3A3A] text-gray-400 hover:text-red-400 transition-colors"
+                          title="Delete bucket"
+                        >
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M3 6h18"></path>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                          </svg>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+                <button
+                  onClick={() => {
+                    setEditingBucket(null);
+                    setNewBucket('');
+                    setShowBucketForm(true);
+                  }}
+                  className="w-full text-left px-3 py-2 rounded-md text-sm text-gray-400 hover:text-gray-300 transition-colors"
+                >
+                  + New Bucket
+                </button>
+              </div>
             </div>
           </div>
         )}
 
-        <div className={`${sidebarHidden ? 'w-full' : 'w-4/5'} space-y-2 max-h-[380px] overflow-y-auto pr-1 transition-all duration-300 ease-in-out`}>
-          {filteredItems.length === 0 ? (
+        <div className={`${sidebarHidden ? 'w-full' : 'w-2/3'} h-full p-4 overflow-y-auto`}>
+          {!items || filteredItems.length === 0 ? (
             <div className="text-center text-gray-500 mt-8">
               <div className="text-4xl mb-2">📋</div>
               <p>{selectedBucket === 'all' ? 'Your clipboard is empty' : `No items in "${selectedBucket}"`}</p>
             </div>
           ) : (
-            filteredItems.map((item) => (
-              <div
-                key={item.id}
-                className={`group relative p-3 bg-[#1A1A1A] rounded-lg hover:bg-[#2A2A2A] transition-all duration-200 cursor-pointer transform hover:translate-y-[-2px] hover:shadow-md ${draggedItem?.id === item.id ? 'opacity-50' : ''}`}
-                onClick={() => copyToClipboard(item.content, item.id)}
-                draggable="true"
-                onDragStart={(e) => handleDragStart(e, item)}
-                onDragOver={(e) => handleDragOver(e, item)}
-                onDrop={(e) => handleDrop(e, item)}
-                onDragEnd={handleDragEnd}
-              >
-                {/* Drag handle */}
+            <div className="space-y-2">
+              {filteredItems.map((item) => (
                 <div
-                  className="absolute left-1 top-0 bottom-0 flex items-center justify-center px-1 cursor-grab opacity-0 group-hover:opacity-100 transition-opacity"
-                  onMouseDown={(e) => e.stopPropagation()}
+                  key={item.id}
+                  className={`group relative p-3 bg-[#1A1A1A] rounded-lg hover:bg-[#2A2A2A] cursor-pointer hover:shadow-md ${draggedItem?.id === item.id ? 'opacity-50' : ''}`}
+                  onClick={() => copyToClipboard(item.content, item.id)}
+                  draggable="true"
+                  onDragStart={(e) => handleDragStart(e, item)}
+                  onDragOver={(e) => handleDragOver(e, item)}
+                  onDrop={(e) => handleDrop(e, item)}
+                  onDragEnd={handleDragEnd}
                 >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-500">
-                    <path d="M8 9h8M8 15h8" />
-                  </svg>
-                </div>
+                  {/* Drag handle */}
+                  <div
+                    className="absolute left-1 top-0 bottom-0 flex items-center justify-center px-1 cursor-grab opacity-40 group-hover:opacity-100"
+                    onMouseDown={(e) => e.stopPropagation()}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
+                      <circle cx="9" cy="7" r="1" fill="currentColor" />
+                      <circle cx="9" cy="12" r="1" fill="currentColor" />
+                      <circle cx="9" cy="17" r="1" fill="currentColor" />
+                      <circle cx="15" cy="7" r="1" fill="currentColor" />
+                      <circle cx="15" cy="12" r="1" fill="currentColor" />
+                      <circle cx="15" cy="17" r="1" fill="currentColor" />
+                    </svg>
+                  </div>
 
-                {copiedId === item.id && (
-                  <div className="absolute inset-0 bg-gray-500/20 rounded-lg flex items-center justify-center backdrop-blur-sm animate-fadeIn">
-                    <span className="text-white font-medium">
-                      Copied!
-                    </span>
-                  </div>
-                )}
-                <div className="font-medium text-white mb-1 pl-3">{item.label}</div>
-                <div className="text-sm text-gray-400 break-words pl-3">
-                  {truncateText(item.content)}
-                </div>
-                {item.buckets && item.buckets.filter(b => b !== 'all').length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-1 pl-3">
-                    {item.buckets.filter(b => b !== 'all').map(bucket => (
-                      <span key={bucket} className="text-xs bg-[#333333] text-gray-300 px-2 py-0.5 rounded-full">
-                        {bucket}
+                  {copiedId === item.id && (
+                    <div className="absolute inset-0 bg-gray-500/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
+                      <span className="text-white font-medium">
+                        Copied!
                       </span>
-                    ))}
+                    </div>
+                  )}
+                  <div className="font-medium text-white mb-1 pl-5">{item.label}</div>
+                  <div className="text-sm text-gray-400 break-words pl-5">
+                    {truncateText(item.content)}
                   </div>
-                )}
-                <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {isLikelyUrl(item.content) && (
+                  {item.buckets && item.buckets.filter(b => b !== 'all').length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1 pl-5">
+                      {item.buckets.filter(b => b !== 'all').map(bucket => (
+                        <span key={bucket} className="text-xs bg-[#333333] text-gray-300 px-2 py-0.5 rounded-full">
+                          {bucket}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {isLikelyUrl(item.content) && (
+                      <button
+                        onClick={(e) => openLink(item.content, e)}
+                        className="p-1.5 rounded-md hover:bg-[#444444] text-gray-400 hover:text-blue-400 transition-colors"
+                        title="Open link"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                          <path d="M15 3h6v6"></path>
+                          <path d="M10 14L21 3"></path>
+                        </svg>
+                      </button>
+                    )}
                     <button
-                      onClick={(e) => openLink(item.content, e)}
-                      className="p-1.5 rounded-md hover:bg-[#444444] text-gray-400 hover:text-blue-400 transition-colors"
-                      title="Open link"
+                      onClick={(e) => editItem(item, e)}
+                      className="p-1.5 rounded-md hover:bg-[#444444] text-gray-400 hover:text-white transition-colors"
+                      title="Edit"
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                        <path d="M15 3h6v6"></path>
-                        <path d="M10 14L21 3"></path>
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                       </svg>
                     </button>
-                  )}
-                  <button
-                    onClick={(e) => editItem(item, e)}
-                    className="p-1.5 rounded-md hover:bg-[#444444] text-gray-400 hover:text-white transition-colors"
-                    title="Edit"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                    </svg>
-                  </button>
-                  <button
-                    onClick={(e) => deleteItem(item.id, e)}
-                    className="p-1.5 rounded-md hover:bg-[#444444] text-gray-400 hover:text-red-400 transition-colors"
-                    title="Delete"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M3 6h18"></path>
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                    </svg>
-                  </button>
+                    <button
+                      onClick={(e) => deleteItem(item.id, e)}
+                      className="p-1.5 rounded-md hover:bg-[#444444] text-gray-400 hover:text-red-400 transition-colors"
+                      title="Delete"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M3 6h18"></path>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </div>
       </div>
@@ -459,7 +475,7 @@ function App() {
           onClick={(e) => e.target === e.currentTarget && setShowForm(false)}
         >
           <div
-            className="bg-[#1A1A1A] p-6 rounded-lg w-96 shadow-xl animate-slideIn"
+            className="bg-[#1A1A1A] p-6 rounded-lg w-96 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-lg font-semibold mb-4 text-white">
@@ -565,7 +581,7 @@ function App() {
           onClick={(e) => e.target === e.currentTarget && setShowBucketForm(false)}
         >
           <div
-            className="bg-[#1A1A1A] p-6 rounded-lg w-80 shadow-xl animate-slideIn"
+            className="bg-[#1A1A1A] p-6 rounded-lg w-80 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-lg font-semibold mb-4 text-white">
