@@ -2,9 +2,19 @@
   "manifest_version": 3,
   "name": "Clippit",
   "version": "1.0.0",
-  "description": "A simple clipboard manager extension",
-  "permissions": ["storage", "clipboardWrite"],
+  "description": "A modern clipboard manager for your browser",
+  "icons": {
+    "16": "/clippit_icon_wbg.png",
+    "48": "/clippit_icon_wbg.png",
+    "128": "/clippit_icon_wbg.png"
+  },
   "action": {
-    "default_popup": "index.html"
-  }
+    "default_popup": "index.html",
+    "default_icon": {
+      "16": "/clippit_icon_wbg.png",
+      "48": "/clippit_icon_wbg.png",
+      "128": "/clippit_icon_wbg.png"
+    }
+  },
+  "permissions": ["storage", "clipboardWrite", "clipboardRead", "tabs"]
 }

@@ -16,6 +16,10 @@ function App() {
   const [sidebarHidden, setSidebarHidden] = useState(false)
   const [editingBucket, setEditingBucket] = useState(null)
   const [draggedItem, setDraggedItem] = useState(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [itemToDelete, setItemToDelete] = useState(null)
+  const [bucketToDelete, setBucketToDelete] = useState(null)
+  const [dropTarget, setDropTarget] = useState(null)
 
   // Load items and buckets from storage when component mounts
   useEffect(() => {
@@ -136,7 +140,50 @@ function App() {
 
   const deleteItem = (id, e) => {
     e.stopPropagation()
-    setItems(items.filter(item => item.id !== id))
+    setItemToDelete(id)
+    setShowDeleteConfirm(true)
+  }
+
+  const confirmDelete = () => {
+    if (itemToDelete) {
+      setItems(items.filter(item => item.id !== itemToDelete))
+      setItemToDelete(null)
+    } else if (bucketToDelete) {
+      // Remove bucket from items
+      const updatedItems = items.map(item => {
+        if (item.buckets && item.buckets.includes(bucketToDelete)) {
+          return {
+            ...item,
+            buckets: item.buckets.filter(b => b !== bucketToDelete)
+          };
+        }
+        return item;
+      });
+
+      setItems(updatedItems);
+      setBuckets(buckets.filter(b => b !== bucketToDelete));
+
+      // If the deleted bucket was selected, reset to 'all'
+      if (selectedBucket === bucketToDelete) {
+        setSelectedBucket('all');
+      }
+
+      setBucketToDelete(null)
+    }
+    setShowDeleteConfirm(false)
+  }
+
+  const cancelDelete = () => {
+    setItemToDelete(null)
+    setBucketToDelete(null)
+    setShowDeleteConfirm(false)
+  }
+
+  const deleteBucket = (bucketName, e) => {
+    e.stopPropagation();
+    if (bucketName === 'all') return; // Don't allow deletion of 'all' bucket
+    setBucketToDelete(bucketName)
+    setShowDeleteConfirm(true)
   }
 
   const editItem = (item, e) => {
@@ -148,31 +195,6 @@ function App() {
       buckets: item.buckets || ['all']
     })
     setShowForm(true)
-  }
-
-  const deleteBucket = (bucketName, e) => {
-    e.stopPropagation();
-
-    if (bucketName === 'all') return; // Don't allow deletion of 'all' bucket
-
-    // Remove bucket from items
-    const updatedItems = items.map(item => {
-      if (item.buckets && item.buckets.includes(bucketName)) {
-        return {
-          ...item,
-          buckets: item.buckets.filter(b => b !== bucketName)
-        };
-      }
-      return item;
-    });
-
-    setItems(updatedItems);
-    setBuckets(buckets.filter(b => b !== bucketName));
-
-    // If the deleted bucket was selected, reset to 'all'
-    if (selectedBucket === bucketName) {
-      setSelectedBucket('all');
-    }
   }
 
   const editBucket = (bucketName, e) => {
@@ -234,6 +256,7 @@ function App() {
   const handleDragOver = (e, item) => {
     e.preventDefault();
     if (!draggedItem || draggedItem.id === item.id) return;
+    setDropTarget(item.id);
     e.dataTransfer.dropEffect = 'move';
   };
 
@@ -251,10 +274,12 @@ function App() {
 
     setItems(newItems);
     setDraggedItem(null);
+    setDropTarget(null);
   };
 
   const handleDragEnd = () => {
     setDraggedItem(null);
+    setDropTarget(null);
   };
 
   const filteredItems = items && selectedBucket === 'all'
@@ -289,9 +314,15 @@ function App() {
               )}
             </svg>
           </button>
-          <h1 className="text-2xl font-bold text-white">
-            Clippit
-          </h1>
+          <div>
+            <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+              <img src="/clippit_icon_nbg.png" alt="Clippit" className="w-10 h-10" />
+              <div className="flex flex-col">
+                Clippit <span className="text-xs text-gray-400 font-normal">v1.0.0-beta</span>
+                <span className="text-xs text-gray-400">by SamayXd</span>
+              </div>
+            </h1>
+          </div>
         </div>
         <button
           onClick={() => {
@@ -299,7 +330,7 @@ function App() {
             setNewItem({ label: '', content: '', buckets: ['all'] })
             setShowForm(true)
           }}
-          className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded-md transition-colors font-medium"
+          className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded-md transition-all duration-200 ease-in-out hover:shadow-md transform hover:translate-y-[-1px] font-medium"
         >
           + Add
         </button>
@@ -308,8 +339,8 @@ function App() {
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         {!sidebarHidden && (
-          <div className="w-1/3 h-full border-r border-[#2A2A2A] overflow-y-auto bg-[#171717]">
-            <div className="p-4">
+          <div className="w-1/3 h-full border-r border-[#2A2A2A] bg-[#171717] flex flex-col">
+            <div className="p-4 flex-1 overflow-y-auto">
               <h2 className="text-sm uppercase text-gray-400 font-medium mb-3">Buckets</h2>
               <div className="space-y-1">
                 {buckets.map(bucket => (
@@ -319,9 +350,9 @@ function App() {
                   >
                     <button
                       onClick={() => setSelectedBucket(bucket)}
-                      className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${selectedBucket === bucket
+                      className={`w-full text-left px-3 py-2 rounded-md text-sm transition-all duration-200 ${selectedBucket === bucket
                         ? 'bg-gray-700 text-white'
-                        : 'hover:bg-[#2A2A2A] text-gray-300'
+                        : 'hover:bg-[#2A2A2A] hover:translate-x-1 text-gray-300'
                         }`}
                     >
                       {bucket === 'all' ? 'All Items' : bucket}
@@ -330,7 +361,7 @@ function App() {
                       <div className="absolute top-1 right-2 opacity-0 group-hover:opacity-100 flex space-x-1">
                         <button
                           onClick={(e) => editBucket(bucket, e)}
-                          className="p-1 rounded hover:bg-[#3A3A3A] text-gray-400 hover:text-white transition-colors"
+                          className="p-1 rounded hover:bg-[#3A3A3A] text-gray-400 hover:text-white transition-all duration-200 hover:shadow-sm"
                           title="Edit bucket"
                         >
                           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -340,11 +371,9 @@ function App() {
                         </button>
                         <button
                           onClick={(e) => {
-                            if (window.confirm(`Are you sure you want to delete the "${bucket}" bucket? This will remove it from all items.`)) {
-                              deleteBucket(bucket, e);
-                            }
+                            deleteBucket(bucket, e);
                           }}
-                          className="p-1 rounded hover:bg-[#3A3A3A] text-gray-400 hover:text-red-400 transition-colors"
+                          className="p-1 rounded hover:bg-[#3A3A3A] text-gray-400 hover:text-red-400 transition-all duration-200 hover:shadow-sm"
                           title="Delete bucket"
                         >
                           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -368,6 +397,20 @@ function App() {
                 </button>
               </div>
             </div>
+            {/* GitHub Star Button - Fixed at bottom */}
+            <div className="p-4 border-t border-[#2A2A2A]">
+              <a
+                href="https://github.com/SamayXd/clippit"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 px-4 py-2 bg-[#2A2A2A] hover:bg-[#333] rounded-md text-sm text-gray-300 hover:text-white transition-colors transform hover:scale-105 duration-200"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-white">
+                  <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+                </svg>
+                Star on GitHub
+              </a>
+            </div>
           </div>
         )}
 
@@ -382,7 +425,7 @@ function App() {
               {filteredItems.map((item) => (
                 <div
                   key={item.id}
-                  className={`group relative p-3 bg-[#1A1A1A] rounded-lg hover:bg-[#2A2A2A] cursor-pointer hover:shadow-md ${draggedItem?.id === item.id ? 'opacity-50' : ''}`}
+                  className={`group relative p-3 bg-[#1A1A1A] rounded-lg hover:bg-[#2A2A2A] cursor-pointer hover:shadow-md transition-all duration-200 ease-in-out ${draggedItem?.id === item.id ? 'opacity-50' : ''}`}
                   onClick={() => copyToClipboard(item.content, item.id)}
                   draggable="true"
                   onDragStart={(e) => handleDragStart(e, item)}
@@ -390,6 +433,11 @@ function App() {
                   onDrop={(e) => handleDrop(e, item)}
                   onDragEnd={handleDragEnd}
                 >
+                  {/* Drop indicator */}
+                  {dropTarget === item.id && dropTarget !== draggedItem?.id && (
+                    <div className="absolute -top-1 left-0 right-0 h-0.5 bg-white opacity-30 animate-pulse"></div>
+                  )}
+
                   {/* Drag handle */}
                   <div
                     className="absolute left-1 top-0 bottom-0 flex items-center justify-center px-1 cursor-grab opacity-40 group-hover:opacity-100"
@@ -429,7 +477,7 @@ function App() {
                     {isLikelyUrl(item.content) && (
                       <button
                         onClick={(e) => openLink(item.content, e)}
-                        className="p-1.5 rounded-md hover:bg-[#444444] text-gray-400 hover:text-blue-400 transition-colors"
+                        className="p-1.5 rounded-md hover:bg-[#444444] text-gray-400 hover:text-blue-400 transition-all duration-200 hover:shadow-sm"
                         title="Open link"
                       >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -441,7 +489,7 @@ function App() {
                     )}
                     <button
                       onClick={(e) => editItem(item, e)}
-                      className="p-1.5 rounded-md hover:bg-[#444444] text-gray-400 hover:text-white transition-colors"
+                      className="p-1.5 rounded-md hover:bg-[#444444] text-gray-400 hover:text-white transition-all duration-200 hover:shadow-sm"
                       title="Edit"
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -451,7 +499,7 @@ function App() {
                     </button>
                     <button
                       onClick={(e) => deleteItem(item.id, e)}
-                      className="p-1.5 rounded-md hover:bg-[#444444] text-gray-400 hover:text-red-400 transition-colors"
+                      className="p-1.5 rounded-md hover:bg-[#444444] text-gray-400 hover:text-red-400 transition-all duration-200 hover:shadow-sm"
                       title="Delete"
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -470,12 +518,12 @@ function App() {
       {/* Popup Form for New Item */}
       {showForm && (
         <div
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center"
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center animate-fadeIn"
           style={{ zIndex: 9999 }}
           onClick={(e) => e.target === e.currentTarget && setShowForm(false)}
         >
           <div
-            className="bg-[#1A1A1A] p-6 rounded-lg w-96 shadow-xl"
+            className="bg-[#1A1A1A] p-6 rounded-lg w-96 shadow-xl animate-slideIn"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-lg font-semibold mb-4 text-white">
@@ -576,12 +624,12 @@ function App() {
       {/* Popup Form for New/Edit Bucket */}
       {showBucketForm && (
         <div
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center"
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center animate-fadeIn"
           style={{ zIndex: 9999 }}
           onClick={(e) => e.target === e.currentTarget && setShowBucketForm(false)}
         >
           <div
-            className="bg-[#1A1A1A] p-6 rounded-lg w-80 shadow-xl"
+            className="bg-[#1A1A1A] p-6 rounded-lg w-80 shadow-xl animate-slideIn"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-lg font-semibold mb-4 text-white">
@@ -617,6 +665,40 @@ function App() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center animate-fadeIn"
+          style={{ zIndex: 9999 }}
+        >
+          <div
+            className="bg-[#1A1A1A] p-6 rounded-lg w-80 shadow-xl animate-slideIn"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-lg font-semibold mb-4 text-white">Confirm Delete</h2>
+            <p className="text-gray-300 mb-6">
+              {itemToDelete
+                ? "Are you sure you want to delete this item?"
+                : `Are you sure you want to delete the "${bucketToDelete}" bucket? This will remove it from all items.`}
+            </p>
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={confirmDelete}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-md transition-colors font-medium"
+              >
+                Delete
+              </button>
+              <button
+                onClick={cancelDelete}
+                className="flex-1 px-4 py-2 hover:bg-[#333333] text-gray-300 rounded-md transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}
