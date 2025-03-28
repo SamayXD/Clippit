@@ -1,9 +1,9 @@
+/* Import Montserrat font */
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Import Montserrat font */
-@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap");
 
 /* Custom scrollbar styling */
 ::-webkit-scrollbar {
@@ -33,6 +33,7 @@ body {
   font-family: "Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI",
     "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
     "Helvetica Neue", sans-serif;
+  text-rendering: optimizeLegibility;
 }
 
 body {
@@ -48,6 +49,26 @@ body {
   justify-content: center;
   align-items: center;
   background-color: #000;
+}
+
+/* Fix text blur issue */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+input,
+textarea,
+button {
+  font-feature-settings: "kern";
+  font-kerning: normal;
+}
+
+/* Fix sub-pixel rendering issues */
+.crisp-text {
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 /* Enhanced animations */
