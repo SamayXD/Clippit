@@ -298,12 +298,12 @@ function App() {
   }
 
   return (
-    <div className="w-[550px] h-[600px] flex flex-col bg-[#111111] text-gray-100 overflow-hidden">
-      <div className="flex justify-between items-center p-4 border-b border-[#2A2A2A]">
+    <div className="w-[580px] h-[580px] flex flex-col bg-[#111111] text-gray-100 overflow-hidden">
+      <div className="flex justify-between items-center p-4 border-b border-[#2A2A2A] bg-gradient-to-r from-[#161616] to-[#1D1D1D]">
         <div className="flex items-center">
           <button
             onClick={() => setSidebarHidden(!sidebarHidden)}
-            className="mr-3 p-1.5 rounded-md hover:bg-[#333] transition-colors"
+            className="mr-3 p-1.5 rounded-md hover:bg-[#333] transition-all duration-200"
             title={sidebarHidden ? "Show sidebar" : "Hide sidebar"}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -314,14 +314,16 @@ function App() {
               )}
             </svg>
           </button>
-          <div>
-            <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-              <img src="/clippit_icon_nbg.png" alt="Clippit" className="w-10 h-10" />
-              <div className="flex flex-col">
-                Clippit <span className="text-xs text-gray-400 font-normal">v1.0.0-beta</span>
-                <span className="text-xs text-gray-400">by SamayXd</span>
+          <div className="flex items-center">
+            <img src="/clippit_icon_nbg.png" alt="Clippit" className="w-8 h-8 mr-3" />
+            <div>
+              <h1 className="text-xl font-bold text-white flex items-center">
+                Clippit <span className="ml-2 text-xs font-normal text-gray-400 bg-[#252525] px-2 py-0.5 rounded">v1.0.0-beta</span>
+              </h1>
+              <div className="text-xs text-gray-400">
+                by <a href="https://github.com/SamayXd" className="text-blue-400 hover:underline hover:text-blue-300" target="_blank" rel="noopener noreferrer">SamayXd</a>
               </div>
-            </h1>
+            </div>
           </div>
         </div>
         <button
@@ -391,9 +393,12 @@ function App() {
                     setNewBucket('');
                     setShowBucketForm(true);
                   }}
-                  className="w-full text-left px-3 py-2 rounded-md text-sm text-gray-400 hover:text-gray-300 transition-colors"
+                  className="w-full text-left px-3 py-2 rounded-md text-sm text-gray-400 hover:text-gray-300 hover:bg-[#252525] transition-all duration-200 flex items-center"
                 >
-                  + New Bucket
+                  <svg className="mr-1" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 5v14M5 12h14"></path>
+                  </svg>
+                  New Bucket
                 </button>
               </div>
             </div>
@@ -408,7 +413,7 @@ function App() {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-white">
                   <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
                 </svg>
-                Star on GitHub
+                ⭐ on GitHub
               </a>
             </div>
           </div>
@@ -454,8 +459,11 @@ function App() {
                   </div>
 
                   {copiedId === item.id && (
-                    <div className="absolute inset-0 bg-gray-500/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
-                      <span className="text-white font-medium">
+                    <div className="absolute inset-0 bg-green-500/20 rounded-lg flex items-center justify-center backdrop-blur-sm animate-fadeIn">
+                      <span className="text-white font-medium flex items-center">
+                        <svg className="mr-1 text-green-400" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
                         Copied!
                       </span>
                     </div>
@@ -473,7 +481,7 @@ function App() {
                       ))}
                     </div>
                   )}
-                  <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:translate-y-0 translate-y-1">
                     {isLikelyUrl(item.content) && (
                       <button
                         onClick={(e) => openLink(item.content, e)}
@@ -526,8 +534,22 @@ function App() {
             className="bg-[#1A1A1A] p-6 rounded-lg w-96 shadow-xl animate-slideIn"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-lg font-semibold mb-4 text-white">
-              {editingItem ? 'Edit Item' : 'Add New Item'}
+            <h2 className="text-lg font-semibold mb-4 text-white flex items-center">
+              {editingItem ?
+                <>
+                  <svg className="mr-2" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                  Edit Item
+                </> :
+                <>
+                  <svg className="mr-2" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 5v14M5 12h14"></path>
+                  </svg>
+                  Add New Item
+                </>
+              }
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -558,7 +580,7 @@ function App() {
                       key={bucket}
                       type="button"
                       onClick={() => toggleBucketSelection(bucket)}
-                      className={`px-2 py-1 text-xs rounded-full transition-colors ${newItem.buckets.includes(bucket)
+                      className={`px-2 py-1 text-xs rounded-full transition-all duration-200 ${newItem.buckets.includes(bucket)
                         ? 'bg-gray-700 text-white'
                         : 'bg-[#252525] text-gray-400 hover:bg-[#333333]'
                         }`}
@@ -600,7 +622,7 @@ function App() {
               <div className="flex gap-2 pt-2">
                 <button
                   type="submit"
-                  className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 rounded-md transition-colors font-medium"
+                  className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 rounded-md transition-all duration-200 ease-in-out hover:shadow-md transform hover:scale-[1.02] font-medium"
                 >
                   {editingItem ? 'Save Changes' : 'Add Item'}
                 </button>
@@ -611,7 +633,7 @@ function App() {
                     setEditingItem(null)
                     setShowNewBucketField(false)
                   }}
-                  className="px-4 py-2 hover:bg-[#333333] text-gray-300 rounded-md transition-colors"
+                  className="px-4 py-2 hover:bg-[#333333] text-gray-300 rounded-md transition-all duration-200"
                 >
                   Cancel
                 </button>
@@ -632,8 +654,24 @@ function App() {
             className="bg-[#1A1A1A] p-6 rounded-lg w-80 shadow-xl animate-slideIn"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-lg font-semibold mb-4 text-white">
-              {editingBucket ? 'Edit Bucket' : 'Add New Bucket'}
+            <h2 className="text-lg font-semibold mb-4 text-white flex items-center">
+              {editingBucket ?
+                <>
+                  <svg className="mr-2" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                  Edit Bucket
+                </> :
+                <>
+                  <svg className="mr-2" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M19 11H5a2 2 0 00-2 2v6a2 2 0 002 2h14a2 2 0 002-2v-6a2 2 0 00-2-2z"></path>
+                    <path d="M17 7l-5-5-5 5"></path>
+                    <line x1="12" y1="2" x2="12" y2="15"></line>
+                  </svg>
+                  Add New Bucket
+                </>
+              }
             </h2>
             <form onSubmit={handleBucketSubmit} className="space-y-4">
               <div>
@@ -649,7 +687,7 @@ function App() {
               <div className="flex gap-2 pt-2">
                 <button
                   type="submit"
-                  className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 rounded-md transition-colors font-medium"
+                  className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 rounded-md transition-all duration-200 ease-in-out hover:shadow-md transform hover:scale-[1.02] font-medium"
                 >
                   {editingBucket ? 'Save Changes' : 'Add Bucket'}
                 </button>
@@ -659,7 +697,7 @@ function App() {
                     setShowBucketForm(false);
                     setEditingBucket(null);
                   }}
-                  className="px-4 py-2 hover:bg-[#333333] text-gray-300 rounded-md transition-colors"
+                  className="px-4 py-2 hover:bg-[#333333] text-gray-300 rounded-md transition-all duration-200"
                 >
                   Cancel
                 </button>
@@ -679,7 +717,15 @@ function App() {
             className="bg-[#1A1A1A] p-6 rounded-lg w-80 shadow-xl animate-slideIn"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-lg font-semibold mb-4 text-white">Confirm Delete</h2>
+            <h2 className="text-lg font-semibold mb-4 text-white flex items-center">
+              <svg className="mr-2 text-red-500" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
+                <line x1="10" y1="11" x2="10" y2="17"></line>
+                <line x1="14" y1="11" x2="14" y2="17"></line>
+              </svg>
+              Confirm Delete
+            </h2>
             <p className="text-gray-300 mb-6">
               {itemToDelete
                 ? "Are you sure you want to delete this item?"
@@ -688,13 +734,13 @@ function App() {
             <div className="flex gap-2 pt-2">
               <button
                 onClick={confirmDelete}
-                className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-md transition-colors font-medium"
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-md transition-all duration-200 ease-in-out hover:shadow-md transform hover:scale-[1.02] font-medium"
               >
                 Delete
               </button>
               <button
                 onClick={cancelDelete}
-                className="flex-1 px-4 py-2 hover:bg-[#333333] text-gray-300 rounded-md transition-colors"
+                className="flex-1 px-4 py-2 hover:bg-[#333333] text-gray-300 rounded-md transition-all duration-200"
               >
                 Cancel
               </button>
