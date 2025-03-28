@@ -66,20 +66,9 @@ const ClipboardItem = ({
                     ))}
                 </div>
             )}
+
+            {/* Top-right edit/delete buttons */}
             <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:translate-y-0 translate-y-1">
-                {isLikelyUrl(item.content) && (
-                    <button
-                        onClick={(e) => openLink(item.content, e)}
-                        className="p-1.5 rounded-md hover:bg-[#444444] text-gray-400 hover:text-blue-400 transition-all duration-200 hover:shadow-sm"
-                        title="Open link"
-                    >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                            <path d="M15 3h6v6"></path>
-                            <path d="M10 14L21 3"></path>
-                        </svg>
-                    </button>
-                )}
                 <button
                     onClick={(e) => editItem(item, e)}
                     className="p-1.5 rounded-md hover:bg-[#444444] text-gray-400 hover:text-white transition-all duration-200 hover:shadow-sm"
@@ -101,6 +90,23 @@ const ClipboardItem = ({
                     </svg>
                 </button>
             </div>
+
+            {/* Bottom-right open link button */}
+            {isLikelyUrl(item.content) && (
+                <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                    <button
+                        onClick={(e) => openLink(item.content, e)}
+                        className="p-2 rounded-md bg-[#333] hover:bg-blue-600 text-gray-300 hover:text-white transition-all duration-200 hover:shadow-md"
+                        title="Open link"
+                    >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                            <path d="M15 3h6v6"></path>
+                            <path d="M10 14L21 3"></path>
+                        </svg>
+                    </button>
+                </div>
+            )}
         </div>
     );
 };

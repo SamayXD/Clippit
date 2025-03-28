@@ -219,6 +219,8 @@ function App() {
     }
 
     // Function to handle potential data recovery if storage is corrupted
+    // Commented out but kept for future reference if needed
+    /*
     const recoverData = () => {
         try {
             setIsLoading(true)
@@ -266,6 +268,7 @@ function App() {
             setIsLoading(false)
         }
     }
+    */
 
     const handleBucketSubmit = (e) => {
         e.preventDefault()
@@ -552,6 +555,17 @@ function App() {
         setShowForm(true);
     };
 
+    // Create a showAddFormWithBucket handler to pass to EmptyState
+    const showAddFormWithBucket = (bucket) => {
+        setEditingItem(null);
+        setNewItem({
+            label: '',
+            content: '',
+            buckets: bucket === 'all' ? ['all'] : ['all', bucket]
+        });
+        setShowForm(true);
+    };
+
     return (
         <div className="w-[580px] h-[580px] flex flex-col bg-[#111111] text-gray-100 overflow-hidden">
             {/* Header Component */}
@@ -605,7 +619,7 @@ function App() {
                                 <EmptyState
                                     title={selectedBucket === 'all' ? 'Your clipboard is empty' : `No items in "${selectedBucket}"`}
                                     description="Start by adding your first item using the Add button."
-                                    action={showAddForm}
+                                    action={() => showAddFormWithBucket(selectedBucket)}
                                     actionLabel="Add Item"
                                 />
                             ) : (
