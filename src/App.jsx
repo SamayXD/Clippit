@@ -15,6 +15,7 @@ function App() {
   const [showNewBucketField, setShowNewBucketField] = useState(false)
   const [sidebarHidden, setSidebarHidden] = useState(false)
   const [editingBucket, setEditingBucket] = useState(null)
+  const [draggedItem, setDraggedItem] = useState(null)
 
   // Load items and buckets from storage when component mounts
   useEffect(() => {
@@ -202,6 +203,55 @@ function App() {
     });
   }
 
+  // Drag and drop handlers
+  const handleDragStart = (e, item) => {
+    // Set a ghost image to be more subtle
+    const ghostElement = document.createElement('div');
+    ghostElement.style.width = '10px';
+    ghostElement.style.height = '10px';
+    ghostElement.style.backgroundColor = 'transparent';
+    document.body.appendChild(ghostElement);
+
+    e.dataTransfer.setDragImage(ghostElement, 0, 0);
+    e.dataTransfer.effectAllowed = 'move';
+
+    setDraggedItem(item);
+
+    // Clean up ghost element
+    setTimeout(() => {
+      document.body.removeChild(ghostElement);
+    }, 0);
+  };
+
+  const handleDragOver = (e, item) => {
+    e.preventDefault();
+    if (!draggedItem || draggedItem.id === item.id) return;
+
+    e.dataTransfer.dropEffect = 'move';
+
+    // Add drop zone visual cue - handled via CSS
+  };
+
+  const handleDrop = (e, targetItem) => {
+    e.preventDefault();
+    if (!draggedItem || draggedItem.id === targetItem.id) return;
+
+    // Create a new array with the dragged item in the new position
+    const newItems = [...items];
+    const [movedItem] = newItems.splice(items.findIndex(item => item.id === draggedItem.id), 1);
+
+    // Find the index in the original array where to insert
+    const originalTargetIndex = items.findIndex(item => item.id === targetItem.id);
+    newItems.splice(originalTargetIndex, 0, movedItem);
+
+    setItems(newItems);
+    setDraggedItem(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedItem(null);
+  };
+
   const filteredItems = selectedBucket === 'all'
     ? items
     : items.filter(item => item.buckets && item.buckets.includes(selectedBucket))
@@ -218,7 +268,7 @@ function App() {
   }
 
   return (
-    <div className="w-[480px] min-h-[450px] p-4 bg-[#111111] text-gray-100">
+    <div className="w-[550px] min-h-[450px] p-4 bg-[#111111] text-gray-100">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center">
           <button
@@ -253,7 +303,7 @@ function App() {
       <div className="flex gap-6 mb-4 relative">
         {/* Sidebar */}
         {!sidebarHidden && (
-          <div className="w-1/4 space-y-2 transition-all duration-300 ease-in-out">
+          <div className="w-1/5 space-y-2 transition-all duration-300 ease-in-out">
             <div className="flex items-center justify-between mb-2">
               <h2 className="text-sm uppercase text-gray-400 font-medium">Buckets</h2>
             </div>
@@ -312,7 +362,7 @@ function App() {
           </div>
         )}
 
-        <div className={`${sidebarHidden ? 'w-full' : 'w-3/4'} space-y-2 max-h-[380px] overflow-y-auto pr-1 transition-all duration-300 ease-in-out`}>
+        <div className={`${sidebarHidden ? 'w-full' : 'w-4/5'} space-y-2 max-h-[380px] overflow-y-auto pr-1 transition-all duration-300 ease-in-out`}>
           {filteredItems.length === 0 ? (
             <div className="text-center text-gray-500 mt-8">
               <div className="text-4xl mb-2">📋</div>
@@ -322,9 +372,24 @@ function App() {
             filteredItems.map((item) => (
               <div
                 key={item.id}
-                className="group relative p-3 bg-[#1A1A1A] rounded-lg hover:bg-[#2A2A2A] transition-all duration-200 cursor-pointer transform hover:translate-y-[-2px] hover:shadow-md"
+                className={`group relative p-3 bg-[#1A1A1A] rounded-lg hover:bg-[#2A2A2A] transition-all duration-200 cursor-pointer transform hover:translate-y-[-2px] hover:shadow-md ${draggedItem?.id === item.id ? 'opacity-50' : ''}`}
                 onClick={() => copyToClipboard(item.content, item.id)}
+                draggable="true"
+                onDragStart={(e) => handleDragStart(e, item)}
+                onDragOver={(e) => handleDragOver(e, item)}
+                onDrop={(e) => handleDrop(e, item)}
+                onDragEnd={handleDragEnd}
               >
+                {/* Drag handle */}
+                <div
+                  className="absolute left-1 top-0 bottom-0 flex items-center justify-center px-1 cursor-grab opacity-0 group-hover:opacity-100 transition-opacity"
+                  onMouseDown={(e) => e.stopPropagation()}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-500">
+                    <path d="M8 9h8M8 15h8" />
+                  </svg>
+                </div>
+
                 {copiedId === item.id && (
                   <div className="absolute inset-0 bg-gray-500/20 rounded-lg flex items-center justify-center backdrop-blur-sm animate-fadeIn">
                     <span className="text-white font-medium">
@@ -332,12 +397,12 @@ function App() {
                     </span>
                   </div>
                 )}
-                <div className="font-medium text-white mb-1">{item.label}</div>
-                <div className="text-sm text-gray-400 break-words">
+                <div className="font-medium text-white mb-1 pl-3">{item.label}</div>
+                <div className="text-sm text-gray-400 break-words pl-3">
                   {truncateText(item.content)}
                 </div>
                 {item.buckets && item.buckets.filter(b => b !== 'all').length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-1">
+                  <div className="mt-2 flex flex-wrap gap-1 pl-3">
                     {item.buckets.filter(b => b !== 'all').map(bucket => (
                       <span key={bucket} className="text-xs bg-[#333333] text-gray-300 px-2 py-0.5 rounded-full">
                         {bucket}
