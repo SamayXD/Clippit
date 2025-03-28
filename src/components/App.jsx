@@ -87,7 +87,7 @@ function App() {
     useEffect(() => {
         try {
             setIsLoading(true)
-            chrome.storage.sync.get(['clipboardItems', 'clipboardBuckets', 'sidebarHidden'], (result) => {
+            chrome.storage.sync.get(['clipboardItems', 'clipboardBuckets', 'sidebarHidden', 'selectedBucket'], (result) => {
                 if (chrome.runtime.lastError) {
                     console.error('Error loading data:', chrome.runtime.lastError)
                     setError('Failed to load data. Please try reloading the extension.')
@@ -103,6 +103,9 @@ function App() {
                 }
                 if (result.sidebarHidden !== undefined) {
                     setSidebarHidden(result.sidebarHidden)
+                }
+                if (result.selectedBucket && result.clipboardBuckets?.includes(result.selectedBucket)) {
+                    setSelectedBucket(result.selectedBucket)
                 }
                 setIsLoading(false)
             })
@@ -137,6 +140,21 @@ function App() {
             console.error('Error saving sidebar state:', err)
         }
     }, [sidebarHidden, isLoading])
+
+    // Save selectedBucket to storage when it changes
+    useEffect(() => {
+        if (isLoading) return // Don't save during initial load
+
+        try {
+            chrome.storage.sync.set({ selectedBucket: selectedBucket }, () => {
+                if (chrome.runtime.lastError) {
+                    console.error('Error saving selected bucket:', chrome.runtime.lastError)
+                }
+            })
+        } catch (err) {
+            console.error('Error saving selected bucket:', err)
+        }
+    }, [selectedBucket, isLoading])
 
     const handleSubmit = (e) => {
         e.preventDefault()
@@ -513,14 +531,18 @@ function App() {
         handleDragStart,
         handleDragOver,
         handleDrop,
-        handleDragEnd
+        handleDragEnd,
+        draggedItem,
+        dropTarget
     };
 
     const bucketDragHandlers = {
         handleBucketDragStart,
         handleBucketDragOver,
         handleBucketDrop,
-        handleBucketDragEnd
+        handleBucketDragEnd,
+        draggedBucket,
+        dropTargetBucket
     };
 
     // Create a showAddForm handler to pass to the Header

@@ -1,5 +1,4 @@
 import React from 'react';
-import BucketItem from '../buckets/BucketItem';
 
 const Sidebar = ({
     buckets,
@@ -10,24 +9,92 @@ const Sidebar = ({
     showBucketForm,
     dragHandlers
 }) => {
+    const {
+        handleBucketDragStart,
+        handleBucketDragOver,
+        handleBucketDrop,
+        handleBucketDragEnd,
+        draggedBucket,
+        dropTargetBucket
+    } = dragHandlers;
+
     return (
         <div className="w-1/3 h-full border-r border-[#2A2A2A] bg-[#171717] flex flex-col">
             <div className="p-4 flex-1 overflow-y-auto">
                 <h2 className="text-sm uppercase text-gray-400 font-medium mb-3">Buckets</h2>
                 <div className="space-y-1">
                     {buckets.map(bucket => (
-                        <BucketItem
+                        <div
                             key={bucket}
-                            bucket={bucket}
-                            selectedBucket={selectedBucket}
-                            setSelectedBucket={setSelectedBucket}
-                            editBucket={editBucket}
-                            deleteBucket={deleteBucket}
-                            dragHandlers={dragHandlers}
-                        />
+                            className="group relative"
+                            draggable={bucket !== 'all'}
+                            onDragStart={(e) => handleBucketDragStart(e, bucket)}
+                            onDragOver={(e) => handleBucketDragOver(e, bucket)}
+                            onDrop={(e) => handleBucketDrop(e, bucket)}
+                            onDragEnd={handleBucketDragEnd}
+                        >
+                            {/* Drop target indicator */}
+                            {dropTargetBucket === bucket && draggedBucket !== bucket && (
+                                <div className="absolute -top-1 left-0 right-0 h-0.5 bg-blue-500 opacity-70 animate-pulse"></div>
+                            )}
+
+                            <div className="flex items-center">
+                                {/* Drag handle for buckets */}
+                                {bucket !== 'all' && (
+                                    <div
+                                        className="absolute left-1 top-0 bottom-0 flex items-center justify-center px-1 cursor-grab opacity-0 group-hover:opacity-60"
+                                        onMouseDown={(e) => e.stopPropagation()}
+                                    >
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
+                                            <circle cx="9" cy="7" r="1" fill="currentColor" />
+                                            <circle cx="9" cy="12" r="1" fill="currentColor" />
+                                            <circle cx="9" cy="17" r="1" fill="currentColor" />
+                                            <circle cx="15" cy="7" r="1" fill="currentColor" />
+                                            <circle cx="15" cy="12" r="1" fill="currentColor" />
+                                            <circle cx="15" cy="17" r="1" fill="currentColor" />
+                                        </svg>
+                                    </div>
+                                )}
+
+                                <button
+                                    onClick={() => setSelectedBucket(bucket)}
+                                    className={`w-full text-left px-3 py-2 rounded-md text-sm transition-all duration-200 ${selectedBucket === bucket
+                                            ? 'bg-gray-700 text-white'
+                                            : 'hover:bg-[#2A2A2A] hover:translate-x-1 text-gray-300'
+                                        } ${bucket !== 'all' ? 'pl-6' : ''}`}
+                                >
+                                    {bucket === 'all' ? 'All Items' : bucket}
+                                </button>
+                            </div>
+
+                            {bucket !== 'all' && (
+                                <div className="absolute top-1 right-1 flex opacity-0 group-hover:opacity-100 transition-all duration-200">
+                                    <button
+                                        onClick={(e) => editBucket(bucket, e)}
+                                        className="p-1 rounded hover:bg-[#3A3A3A] text-gray-400 hover:text-white transition-all duration-200 hover:shadow-sm"
+                                        title="Edit bucket"
+                                    >
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                        </svg>
+                                    </button>
+                                    <button
+                                        onClick={(e) => deleteBucket(bucket, e)}
+                                        className="p-1 rounded hover:bg-[#3A3A3A] text-gray-400 hover:text-red-400 transition-all duration-200 hover:shadow-sm"
+                                        title="Delete bucket"
+                                    >
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <path d="M3 6h18"></path>
+                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     ))}
                     <button
-                        onClick={() => showBucketForm()}
+                        onClick={showBucketForm}
                         className="w-full text-left px-3 py-2 rounded-md text-sm text-gray-400 hover:text-gray-300 hover:bg-[#252525] transition-all duration-200 flex items-center"
                     >
                         <svg className="mr-1" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

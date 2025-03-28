@@ -1,5 +1,4 @@
 import React from 'react';
-import Button from '../ui/Button';
 
 const Header = ({
     sidebarHidden,
@@ -24,7 +23,7 @@ const Header = ({
                     </svg>
                 </button>
                 <div className="flex items-center">
-                    <img src="/clippit_icon_nbg.png" alt="Clippit" className="w-8 h-8 mr-3" style={{ imageRendering: 'crisp-edges' }} />
+                    <img src="/clippit_icon_nbg.png" alt="Clippit" className="w-8 h-8 mr-3" />
                     <div>
                         <h1 className="text-xl font-bold text-white flex items-center crisp-text">
                             Clippit <span className="ml-2 text-xs font-normal text-gray-400 bg-[#252525] px-2 py-0.5 rounded">v1.0.0-beta</span>
@@ -35,13 +34,13 @@ const Header = ({
                     </div>
                 </div>
             </div>
-            <Button
+            <button
                 onClick={showAddForm}
-                className="px-3 py-1.5 font-medium"
+                className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded-md transition-all duration-200 ease-in-out hover:shadow-md transform hover:translate-y-[-1px] font-medium"
                 disabled={isLoading}
             >
                 + Add
-            </Button>
+            </button>
         </div>
     );
 };

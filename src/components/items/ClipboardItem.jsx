@@ -11,22 +11,11 @@ const ClipboardItem = ({
     dragHandlers,
     copiedId
 }) => {
-    const {
-        handleDragStart,
-        handleDragOver,
-        handleDrop,
-        handleDragEnd,
-        draggedItem,
-        dropTarget
-    } = dragHandlers;
-
-    const isBeingCopied = copiedId === item.id;
-    const isDragged = draggedItem?.id === item.id;
-    const isDropTarget = dropTarget === item.id && dropTarget !== draggedItem?.id;
+    const { handleDragStart, handleDragOver, handleDrop, handleDragEnd } = dragHandlers;
 
     return (
         <div
-            className={`group relative p-3 bg-[#1A1A1A] rounded-lg hover:bg-[#2A2A2A] cursor-pointer hover:shadow-md transition-all duration-200 ease-in-out ${isDragged ? 'opacity-50' : ''}`}
+            className={`group relative p-3 bg-[#1A1A1A] rounded-lg hover:bg-[#2A2A2A] cursor-pointer hover:shadow-md transition-all duration-200 ease-in-out ${dragHandlers.draggedItem?.id === item.id ? 'opacity-50' : ''}`}
             onClick={() => copyToClipboard(item.content, item.id)}
             draggable="true"
             onDragStart={(e) => handleDragStart(e, item)}
@@ -35,8 +24,8 @@ const ClipboardItem = ({
             onDragEnd={handleDragEnd}
         >
             {/* Drop indicator */}
-            {isDropTarget && (
-                <div className="absolute -top-1 left-0 right-0 h-0.5 bg-white opacity-30 animate-pulse"></div>
+            {dragHandlers.dropTarget === item.id && dragHandlers.dropTarget !== dragHandlers.draggedItem?.id && (
+                <div className="absolute -top-1 left-0 right-0 h-0.5 bg-blue-500 opacity-70 animate-pulse"></div>
             )}
 
             {/* Drag handle */}
@@ -54,7 +43,7 @@ const ClipboardItem = ({
                 </svg>
             </div>
 
-            {isBeingCopied && (
+            {copiedId === item.id && (
                 <div className="absolute inset-0 bg-green-500/20 rounded-lg flex items-center justify-center backdrop-blur-sm animate-fadeIn">
                     <span className="text-white font-medium flex items-center">
                         <svg className="mr-1 text-green-400" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -64,12 +53,10 @@ const ClipboardItem = ({
                     </span>
                 </div>
             )}
-
-            <div className="font-medium text-white mb-1 pl-5 crisp-text">{item.label}</div>
+            <div className="font-medium text-white mb-1 pl-5">{item.label}</div>
             <div className="text-sm text-gray-400 break-words pl-5">
                 {truncateText(item.content)}
             </div>
-
             {item.buckets && item.buckets.filter(b => b !== 'all').length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1 pl-5">
                     {item.buckets.filter(b => b !== 'all').map(bucket => (
@@ -79,7 +66,6 @@ const ClipboardItem = ({
                     ))}
                 </div>
             )}
-
             <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:translate-y-0 translate-y-1">
                 {isLikelyUrl(item.content) && (
                     <button
